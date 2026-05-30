@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TECA · Pedinos presupuesto</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-1); color: var(--fg-1); }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 72px 32px 96px;
+  }
+
+  /* ---- Encabezado ---- */
+  .masthead { text-align: center; margin-bottom: 56px; }
+  .wordmark-lg {
+    font-family: var(--font-wordmark);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-mark);
+    text-indent: var(--tracking-mark);
+    font-size: 52px;
+    line-height: 1;
+    color: var(--c-ink);
+    margin-bottom: 26px;
+  }
+  .tick { display:block; width:1px; height:28px; background:var(--c-ink); opacity:.85; margin:0 auto 18px; }
+  .eyebrow-it {
+    font-family: var(--font-sans); font-style: italic; font-weight: 300;
+    font-size: 14px; letter-spacing: .04em; color: var(--c-ink); margin-bottom: 18px;
+  }
+  .masthead h1 {
+    font-family: var(--font-display); font-weight: 300; font-size: 48px;
+    line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 16px;
+  }
+  .masthead p {
+    color: var(--fg-2); font-size: 16px; line-height: 1.7;
+    max-width: 46ch; margin: 0 auto;
+  }
+  .masthead p + p { margin-top: 2px; }
+
+  /* ---- Formulario ---- */
+  .form { min-width: 0; }
+
+  /* ---- Layout dos columnas ---- */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 384px;
+    gap: 56px;
+    align-items: start;
+  }
+  .layout.hide { display: none; }
+
+  .lbl-hint { text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--c-ink-mute); font-style: italic; }
+  .measures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field > label, .block-label {
+    display:block; font-family:var(--font-sans); font-size:11px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-3); margin-bottom:6px;
+  }
+  .input {
+    width:100%; background: transparent;
+    border: 0; border-bottom: 1px solid var(--c-ink); border-radius: 0;
+    padding: 10px 0; font-family: var(--font-display); font-size: 19px; font-weight: 400;
+    color: var(--c-ink); outline: none;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .input::placeholder { color: var(--c-ink-mute); font-style: italic; font-weight:300; }
+  .input:focus { border-color: var(--accent); }
+  .textarea { resize:none; min-height: 64px; line-height:1.5; }
+  .field-guide {
+    font-family: var(--font-sans); font-weight: 300; font-style: italic;
+    font-size: 13px; line-height: 1.6; color: var(--c-ink-mute);
+    margin: 4px 0 14px; max-width: none;
+  }
+
+  .group { display:grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; }
+  .span-2 { grid-column: 1 / -1; }
+
+  /* Bloques de selección */
+  .block { margin-top: 38px; }
+  .split { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 0; }
+
+  /* Tarjetas de opción (material / herrajes) */
+  .card-grid { display: grid; gap: 14px; margin-top: 10px; }
+  .card-grid.two { grid-template-columns: 1fr 1fr; }
+  .card-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .opt {
+    text-align: left; cursor: pointer; background: transparent;
+    border: 1px solid var(--border-hair); border-radius: var(--radius-sm);
+    padding: 18px 20px; display: flex; flex-direction: column; gap: 5px;
+    transition: border-color var(--dur-base) var(--ease-out),
+                background var(--dur-base) var(--ease-out);
+  }
+  .opt .opt-t {
+    font-family: var(--font-display); font-weight: 400; font-size: 21px;
+    line-height: 1.1; color: var(--c-ink);
+  }
+  .opt .opt-s {
+    font-family: var(--font-sans); font-size: 13px; font-weight: 300;
+    letter-spacing: 0.01em; color: var(--fg-3);
+  }
+  .opt:hover { border-color: var(--c-ink-soft); }
+  .opt.is-selected { border-color: var(--c-ink); background: rgba(149,113,79,0.07); }
+
+  /* Piezas — íconos sin recuadro */
+  .piece-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 6px; margin-top: 8px; }
+  .piece {
+    cursor: pointer; background: transparent; border: 0; padding: 6px 2px 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--c-ink-soft);
+    transition: color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+    position: relative;
+  }
+  .piece svg { display: block; transition: stroke-width var(--dur-base) var(--ease-out); }
+  .piece .name {
+    font-family: var(--font-sans); font-size: 11px;
+    letter-spacing: 0.04em; line-height: 1; text-align: center;
+    color: var(--c-ink-soft); transition: color var(--dur-base) var(--ease-out);
+  }
+  .piece:hover { color: var(--c-ink); transform: translateY(-2px); }
+  .piece:hover svg { stroke-width: 1.35; }
+  .piece:hover .name { color: var(--c-ink); }
+  .piece.is-selected { color: var(--c-ink); }
+  .piece.is-selected .name { color: var(--c-ink); }
+  .piece.is-selected::after {
+    content: ""; display: block; width: 14px; height: 1px; background: var(--c-ink);
+    position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  }
+
+  /* Tonos — círculos */
+  .tone-row { display: flex; flex-wrap: wrap; gap: 18px 16px; margin-top: 8px; }
+  .tone {
+    cursor: pointer; background: transparent; border: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--c-ink-soft); transition: color var(--dur-base) var(--ease-out);
+  }
+  .tone .chip {
+    width: 44px; height: 44px; border-radius: 999px;
+    border: 1px solid rgba(46,34,24,0.12);
+    background-size: cover; background-position: center;
+    transition: border-color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out),
+                box-shadow var(--dur-base) var(--ease-out);
+  }
+  .tone .name {
+    font-family: var(--font-sans); font-size: 11px;
+    letter-spacing: 0.04em; line-height: 1; text-align: center;
+  }
+  .tone:hover { color: var(--c-ink); }
+  .tone:hover .chip { transform: translateY(-2px); border-color: var(--c-ink); box-shadow: 0 4px 10px rgba(46,34,24,0.10); }
+  .tone.is-selected { color: var(--c-ink); }
+  .tone.is-selected .chip { border-color: var(--c-ink); box-shadow: 0 0 0 2px var(--c-almond), 0 0 0 3px var(--c-ink); }
+  .chip.is-otro { background: transparent; border: 1px dashed var(--c-ink-mute); position: relative; }
+  .chip.is-otro::after { content: "+"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-sans); font-size: 16px; line-height: 1; color: var(--c-ink-mute); }
+  .tone-note { font-family: var(--font-sans); font-style: italic; font-weight: 300; font-size: 13px; color: var(--c-ink-mute); margin: 10px 0 0; max-width: 52ch; }
+
+  /* Resumen de selección */
+  .selected-row {
+    margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--border-hair);
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--font-display); font-style: italic; font-weight: 400;
+    font-size: 19px; color: var(--c-ink);
+  }
+  .selected-row .lbl {
+    font-family: var(--font-sans); font-style: normal; font-weight: 400;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3);
+  }
+  .selected-row .dot { width: 18px; height: 18px; border-radius: 999px; border: 1px solid var(--border-hair); background: #C7AF94; }
+  .selected-row .sep { color: var(--fg-3); }
+
+  /* Submit */
+  .actions { margin-top: 32px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-sans); font-weight: 400; font-size: 13px;
+    letter-spacing: 0.14em; text-transform: uppercase; padding: 14px 28px;
+    border-radius: 0; cursor: pointer; border: 1px solid var(--c-ink);
+    background: var(--c-ink); color: var(--c-almond);
+    transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  .btn:hover { opacity: .88; }
+  .btn:active { transform: scale(0.985); }
+  .microcopy { color: var(--fg-3); font-size: 12px; font-style: italic; }
+
+  /* Pie de contacto */
+  .contact {
+    margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border-hair);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    color: var(--fg-2); font-size: 14px; line-height: 1.6;
+  }
+  .contact span { display: flex; align-items: center; gap: 10px; }
+
+  /* Gracias */
+  .thanks { display: none; text-align: center; padding: 8px 0 40px; }
+  .thanks.show { display: block; }
+  .form.hide { display: none; }
+  .thanks h2 {
+    font-family: var(--font-display); font-weight: 300; font-size: 30px;
+    line-height: 1.2; letter-spacing: -0.005em; margin: 0 auto 20px; max-width: 24ch;
+    color: var(--c-ink);
+  }
+  .thanks p { color: var(--fg-2); font-size: 17px; max-width: 46ch; margin: 0 auto 18px; }
+  .thanks .note {
+    font-family: var(--font-display); font-style: italic; font-weight: 400;
+    font-size: 18px; line-height: 1.5; color: var(--c-ink-soft);
+    max-width: none; margin: 16px auto 32px;
+  }
+  .link-btn {
+    background: transparent; border: 0; cursor: pointer; padding: 0;
+    font-family: var(--font-sans); font-size: 13px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--c-ink);
+    border-bottom: 1px solid var(--border-hair); padding-bottom: 4px;
+  }
+
+  /* ---- Panel "Tu encargo" (plano técnico) ---- */
+  .encargo { position: sticky; top: 28px; }
+  .bp-eyebrow {
+    display: block; text-align: center;
+    font-family: var(--font-sans); font-style: italic; font-weight: 300;
+    font-size: 12px; letter-spacing: 0.06em; color: var(--c-ink-mute);
+    margin-bottom: 12px;
+  }
+  .bp-frame {
+    position: relative;
+    background: var(--bg-2);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-sm);
+    padding: 30px 26px 26px;
+    overflow: hidden;
+  }
+  .bp-ruler { position: absolute; top: 16px; right: 16px; width: 46px; height: 46px; color: var(--c-ink); opacity: 0.26; }
+  .bp-cross { position: absolute; top: 46%; right: -13px; width: 40px; height: 40px; color: var(--c-ink); opacity: 0.20; }
+
+  .bp-stage {
+    position: relative;
+    min-height: 252px;
+    padding: 16px 14px 42px 42px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bp-figure { width: 100%; display: flex; align-items: center; justify-content: center; }
+  .bp-figure svg { display: block; width: 100%; height: auto; max-height: 214px; color: var(--c-ink); }
+  .bp-figure.is-empty svg { opacity: 0.4; }
+
+  .bp-alto {
+    position: absolute; left: 24px; top: 18px; bottom: 48px; width: 1px; background: var(--accent);
+  }
+  .bp-alto::before, .bp-alto::after { content: ""; position: absolute; left: -3px; width: 7px; height: 1px; background: var(--accent); }
+  .bp-alto::before { top: 0; }
+  .bp-alto::after { bottom: 0; }
+  .bp-ancho {
+    position: absolute; left: 42px; right: 18px; bottom: 28px; height: 1px; background: var(--accent);
+  }
+  .bp-ancho::before, .bp-ancho::after { content: ""; position: absolute; top: -3px; width: 1px; height: 7px; background: var(--accent); }
+  .bp-ancho::before { left: 0; }
+  .bp-ancho::after { right: 0; }
+  .bp-dim-lbl {
+    position: absolute; font-family: var(--font-sans); font-weight: 400;
+    font-size: 10px; letter-spacing: 0.08em; color: var(--accent);
+    white-space: nowrap; background: var(--bg-2); padding: 0 4px;
+  }
+  .bp-alto .bp-dim-lbl { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+  .bp-ancho .bp-dim-lbl { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+
+  .bp-name {
+    text-align: center; font-family: var(--font-sans); font-weight: 400;
+    font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--c-ink); margin-top: 4px;
+  }
+  .bp-name.is-empty { color: var(--c-ink-mute); font-style: italic; text-transform: none; letter-spacing: 0.04em; font-weight: 300; }
+
+  .bp-meta { margin-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 20px; }
+  .bp-finish { display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-display); font-size: 19px; line-height: 1.2; white-space: nowrap; color: var(--c-ink); }
+  .bp-finish.is-empty { display: none; }
+  .bp-chip { width: 18px; height: 18px; border-radius: 999px; border: 1px solid var(--border-hair); background: transparent; background-size: cover; background-position: center; flex: none; }
+  .bp-row { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-ink-soft); white-space: nowrap; }
+  .bp-row.is-empty { display: none; }
+
+  .bp-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; justify-content: center; }
+  .bp-tag {
+    font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.04em;
+    color: var(--c-ink-mute); border: 1px solid var(--border-hair); border-radius: var(--radius-sm);
+    padding: 7px 12px;
+    transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+  }
+  .bp-tag.on { color: var(--c-ink); border-color: var(--c-ink-soft); }
+
+  @media (max-width: 920px) {
+    .layout { grid-template-columns: 1fr; gap: 40px; }
+    .encargo { position: static; }
+    .bp-frame { max-width: 440px; margin: 0 auto; }
+  }
+  @media (max-width: 600px) {
+    .group { grid-template-columns: 1fr; }
+    .measures { grid-template-columns: 1fr; }
+    .contact { grid-template-columns: 1fr; }
+    .card-grid.two, .card-grid.three { grid-template-columns: 1fr; }
+    .piece-grid { grid-template-columns: repeat(3, 1fr); }
+    .masthead h1 { font-size: 38px; }
+  }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#EADED0"></rect>
+    <g fill="none" stroke="#2E2218" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="34" y="40" width="32" height="30"></rect>
+      <line x1="30" y1="40" x2="70" y2="40"></line>
+      <line x1="38" y1="70" x2="38" y2="78"></line>
+      <line x1="62" y1="70" x2="62" y2="78"></line>
+      <line x1="50" y1="40" x2="50" y2="70"></line>
+    </g>
+    <text x="50" y="32" font-family="Georgia, serif" font-size="15" letter-spacing="4" fill="#2E2218" text-anchor="middle">TECA</text>
+  </svg>
+</template>
+<div class="page">
+
+  <header class="masthead">
+    <div class="wordmark-lg">TECA</div>
+    <div class="eyebrow-it">— encargos —</div>
+    <h1 id="masthead-title">Pedinos presupuesto.</h1>
+    <p class="masthead-sub">Contanos qué proyecto tenés en mente, el espacio donde te lo imaginás, y algunas referencias más.</p>
+  </header>
+
+  <div class="layout" id="layout">
+
+  <form class="form" id="presupuesto">
+
+    <!-- Datos básicos -->
+    <div class="group">
+      <div class="field">
+        <label for="f-nombre">Nombre</label>
+        <input class="input" id="f-nombre" name="nombre" placeholder="Tu nombre">
+      </div>
+      <div class="field">
+        <label for="f-correo">Correo</label>
+        <input class="input" id="f-correo" name="correo" type="email" placeholder="vos@correo.com">
+      </div>
+      <div class="field">
+        <label for="f-ubicacion">Ubicación</label>
+        <input class="input" id="f-ubicacion" name="ubicacion" placeholder="Ciudad o barrio">
+      </div>
+      <div class="field">
+        <label for="f-celular">Celular</label>
+        <input class="input" id="f-celular" name="celular" type="tel" placeholder="+54 9 …">
+      </div>
+      <div class="field span-2">
+        <label>Medidas aproximadas <span class="lbl-hint">(cm · si no las tenés exactas, estimá)</span></label>
+        <div class="measures">
+          <input class="input" id="f-ancho" name="ancho" inputmode="numeric" placeholder="ancho">
+          <input class="input" id="f-alto" name="alto" inputmode="numeric" placeholder="alto">
+          <input class="input" id="f-prof" name="prof" inputmode="numeric" placeholder="profundidad">
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <span class="block-label">¿Qué proyecto tenés en mente?</span>
+      <div class="piece-grid" id="piece-grid">
+          <button type="button" class="piece" data-piece="Cocina">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="6" width="13" height="9"></rect><rect x="21" y="6" width="13" height="5"></rect>
+              <line x1="6" y1="22" x2="34" y2="22"></line><rect x="6" y="22" width="28" height="12"></rect>
+              <circle cx="13" cy="28" r="3"></circle><line x1="22" y1="26" x2="22" y2="30"></line><line x1="28" y1="26" x2="28" y2="30"></line>
+            </svg>
+            <span class="name">Cocina</span>
+          </button>
+          <button type="button" class="piece" data-piece="Mesa">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="16" x2="35" y2="16"></line><line x1="5" y1="19" x2="35" y2="19"></line>
+              <line x1="9" y1="19" x2="9" y2="33"></line><line x1="31" y1="19" x2="31" y2="33"></line>
+              <line x1="13" y1="19" x2="13" y2="28"></line><line x1="27" y1="19" x2="27" y2="28"></line>
+            </svg>
+            <span class="name">Mesa</span>
+          </button>
+          <button type="button" class="piece" data-piece="Vestidor">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="6" width="28" height="28"></rect><line x1="20" y1="6" x2="20" y2="34"></line>
+              <line x1="9" y1="12" x2="17" y2="12"></line>
+              <path d="M11 12v3a2 2 0 0 0 2 2"></path><path d="M15 12v3a2 2 0 0 1-2 2"></path>
+              <line x1="23" y1="14" x2="31" y2="14"></line><line x1="23" y1="20" x2="31" y2="20"></line><line x1="23" y1="26" x2="31" y2="26"></line>
+            </svg>
+            <span class="name">Vestidor</span>
+          </button>
+          <button type="button" class="piece" data-piece="Rack TV">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7" y="6" width="26" height="14" rx="0.5"></rect><line x1="15" y1="22" x2="25" y2="22"></line>
+              <rect x="5" y="24" width="30" height="10"></rect><line x1="20" y1="24" x2="20" y2="34"></line>
+              <circle cx="12.5" cy="29" r="0.6" fill="currentColor"></circle><circle cx="27.5" cy="29" r="0.6" fill="currentColor"></circle>
+            </svg>
+            <span class="name">Rack TV</span>
+          </button>
+          <button type="button" class="piece" data-piece="Escritorio">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="14" x2="36" y2="14"></line><line x1="4" y1="16" x2="36" y2="16"></line>
+              <rect x="22" y="16" width="11" height="14"></rect>
+              <line x1="22" y1="20" x2="33" y2="20"></line><line x1="22" y1="25" x2="33" y2="25"></line>
+              <line x1="7" y1="16" x2="7" y2="33"></line>
+              <line x1="11" y1="29" x2="22" y2="29"></line><line x1="11" y1="29" x2="11" y2="34"></line>
+            </svg>
+            <span class="name">Escritorio</span>
+          </button>
+          <button type="button" class="piece" data-piece="Respaldo">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="6" width="28" height="20"></rect><line x1="6" y1="10" x2="34" y2="10"></line>
+              <line x1="4" y1="28" x2="36" y2="28"></line><line x1="4" y1="32" x2="36" y2="32"></line>
+              <line x1="11" y1="22" x2="19" y2="22"></line><line x1="11" y1="25" x2="19" y2="25"></line>
+              <line x1="21" y1="22" x2="29" y2="22"></line><line x1="21" y1="25" x2="29" y2="25"></line>
+            </svg>
+            <span class="name">Respaldo</span>
+          </button>
+          <button type="button" class="piece" data-piece="Mesa de luz">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4 h6 l2 6 h-10 z"></path><line x1="19" y1="10" x2="19" y2="18"></line>
+              <line x1="6" y1="18" x2="32" y2="18"></line><line x1="6" y1="20" x2="32" y2="20"></line>
+              <rect x="9" y="20" width="20" height="14"></rect>
+              <line x1="9" y1="26" x2="29" y2="26"></line><circle cx="19" cy="29.5" r="0.7" fill="currentColor"></circle>
+              <line x1="11" y1="23" x2="13" y2="23"></line>
+            </svg>
+            <span class="name">Mesa de luz</span>
+          </button>
+          <button type="button" class="piece" data-piece="Exterior">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="10" x2="32" y2="10"></line>
+              <line x1="11" y1="7" x2="11" y2="34"></line><line x1="29" y1="7" x2="29" y2="34"></line>
+              <line x1="15" y1="7" x2="15" y2="13"></line><line x1="20" y1="7" x2="20" y2="13"></line><line x1="25" y1="7" x2="25" y2="13"></line>
+              <line x1="6" y1="34" x2="34" y2="34"></line>
+            </svg>
+            <span class="name">Exterior</span>
+          </button>
+          <button type="button" class="piece" data-piece="Biblioteca">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7" y="5" width="26" height="30"></rect>
+              <line x1="7" y1="15" x2="33" y2="15"></line><line x1="7" y1="25" x2="33" y2="25"></line>
+              <line x1="11" y1="7" x2="11" y2="13"></line><line x1="14" y1="7" x2="14" y2="13"></line><line x1="17" y1="8" x2="17" y2="13"></line>
+              <line x1="22" y1="17" x2="22" y2="23"></line><line x1="25" y1="17" x2="25" y2="23"></line><line x1="28" y1="18" x2="28" y2="23"></line>
+              <line x1="11" y1="27" x2="11" y2="33"></line><line x1="14" y1="27" x2="14" y2="33"></line>
+            </svg>
+            <span class="name">Biblioteca</span>
+          </button>
+          <button type="button" class="piece" data-piece="Otro">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="14" cy="20" r="1.5" fill="currentColor" stroke="none"></circle>
+              <circle cx="20" cy="20" r="1.5" fill="currentColor" stroke="none"></circle>
+              <circle cx="26" cy="20" r="1.5" fill="currentColor" stroke="none"></circle>
+            </svg>
+            <span class="name">Otro</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Material -->
+      <div class="block">
+        <span class="block-label">Material</span>
+        <div class="card-grid two" id="material-grid">
+          <button type="button" class="opt" data-opt="material" data-val="Madera maciza">
+            <span class="opt-t">Madera maciza</span>
+            <span class="opt-s">Paraíso, petiribí, kiri</span>
+          </button>
+          <button type="button" class="opt" data-opt="material" data-val="MDF pintado">
+            <span class="opt-t">MDF pintado</span>
+            <span class="opt-s">Laqueado liso o texturado</span>
+          </button>
+          <button type="button" class="opt" data-opt="material" data-val="Melamina">
+            <span class="opt-t">Melamina</span>
+            <span class="opt-s">Resistente y económica</span>
+          </button>
+          <button type="button" class="opt" data-opt="material" data-val="Mixto">
+            <span class="opt-t">Mixto</span>
+            <span class="opt-s">Combinación a medida</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Herrajes y accesorios -->
+      <div class="block">
+        <span class="block-label">Herrajes y accesorios</span>
+        <div class="card-grid two" id="herraje-grid">
+          <button type="button" class="opt" data-opt="herraje" data-val="Standard">
+            <span class="opt-t">Standard</span>
+            <span class="opt-s">Corredera telescópica reforzada · bisagra cazoleta tradicional</span>
+          </button>
+          <button type="button" class="opt" data-opt="herraje" data-val="Premium">
+            <span class="opt-t">Premium</span>
+            <span class="opt-s">Cierre suave · push-to-open</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Terminación -->
+      <div class="block">
+        <span class="block-label">Terminación</span>
+        <div class="tone-row" id="tone-row"></div>
+        <p class="tone-note" id="tone-note">Elegí un material para ver las terminaciones.</p>
+      </div>
+
+    <!-- Contanos -->
+    <div class="field" style="margin-top: 38px;">
+      <label for="f-mensaje">Contanos sobre el proyecto</label>
+      <p class="field-guide">Para darte un presupuesto más preciso, sumá lo que creas necesario: el espacio donde iría el proyecto, los plazos que esperás, cantidad de cajones o puertas. Si elegiste MDF, decinos si lo querés liso o texturado; si elegiste Mixto, qué combinación de materiales imaginás. Y cualquier otra cosa que quieras compartirnos!</p>
+      <textarea class="input textarea" id="f-mensaje" name="mensaje" rows="4" placeholder="Escribí acá…"></textarea>
+    </div>
+
+    <!-- Envío -->
+    <div class="actions">
+      <button type="submit" class="btn">Enviar consulta</button>
+      <span class="microcopy">Te responderemos a la brevedad.</span>
+    </div>
+
+    <!-- Contacto -->
+    <div class="contact">
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Taller · Gonnet, La Plata
+      </span>
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92V21a1 1 0 0 1-1.1 1A19 19 0 0 1 2 4.1 1 1 0 0 1 3 3h4.1a1 1 0 0 1 1 .75l1 4a1 1 0 0 1-.3 1L7 10.5a16 16 0 0 0 6.5 6.5l1.7-1.7a1 1 0 0 1 1-.3l4 1a1 1 0 0 1 .8 1z"></path></svg>
+        +54 9 221 590 4082
+      </span>
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"></circle></svg>
+        @teca.muebles_
+      </span>
+    </div>
+
+  </form>
+
+  <aside class="encargo" aria-label="Tu encargo">
+    <span class="bp-eyebrow">— tu encargo —</span>
+    <div class="bp-frame" id="bp-frame">
+      <svg class="bp-ruler" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M6 6 L6 58 L58 58 Z"></path>
+        <line x1="6" y1="20" x2="16" y2="20"></line>
+        <line x1="6" y1="34" x2="16" y2="34"></line>
+        <line x1="6" y1="48" x2="16" y2="48"></line>
+      </svg>
+      <svg class="bp-cross" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1">
+        <circle cx="22" cy="22" r="14"></circle>
+        <line x1="22" y1="4" x2="22" y2="40"></line>
+        <line x1="4" y1="22" x2="40" y2="22"></line>
+      </svg>
+
+      <div class="bp-stage">
+        <div class="bp-alto"><span class="bp-dim-lbl" id="bp-alto">alto</span></div>
+        <div class="bp-figure" id="bp-figure"></div>
+        <div class="bp-ancho"><span class="bp-dim-lbl" id="bp-ancho">ancho total</span></div>
+      </div>
+
+      <div class="bp-name" id="bp-name">tu proyecto</div>
+
+      <div class="bp-meta" id="bp-meta">
+        <div class="bp-finish" id="bp-finish">
+          <span class="bp-chip" id="bp-chip"></span>
+          <span id="bp-tone">—</span>
+        </div>
+        <div class="bp-row" id="bp-wood">—</div>
+      </div>
+    </div>
+    <div class="bp-tags">
+      <span class="bp-tag" id="tag-madera">Madera seleccionada</span>
+      <span class="bp-tag" id="tag-herraje">Herrajes de calidad</span>
+      <span class="bp-tag" id="tag-medidas">Medidas exactas</span>
+    </div>
+  </aside>
+
+  </div><!-- /layout -->
+
+  <!-- Gracias -->
+  <div class="thanks" id="thanks">
+    <h2 id="thanks-title">Gracias, te escribimos pronto.</h2>
+    <p>Te abrimos WhatsApp con tu consulta ya cargada — solo tenés que tocar enviar y nos llega al taller. La miramos con calma y te respondemos a la brevedad con los próximos pasos.</p>
+    <p class="note">Si querés, también podés adjuntarnos la imagen del plano de tu presupuesto que ya se te descargó automáticamente, o cualquier otra información que consideres útil<br>(foto del espacio donde va el proyecto, alguna referencia que hayas visto en internet, etc).</p>
+    <button type="button" class="link-btn" id="reset-btn">← Cargar otra consulta</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var state = { piece: null, material: null, herraje: null, tone: null, img: null };
+
+  /* Número de WhatsApp del taller (solo dígitos, con código de país) */
+  var WHATSAPP = '5492215904082';
+
+  /* ---- Dibujos de cada proyecto (vista de plano, viewBox 0 0 220 150) ---- */
+  var S = '<svg viewBox="0 0 220 150" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">';
+  var E = '</svg>';
+
+  var NOTEPAD = S +
+    '<rect x="68" y="18" width="84" height="116"></rect>' +
+    '<circle cx="68" cy="34" r="5"></circle><circle cx="68" cy="54" r="5"></circle><circle cx="68" cy="74" r="5"></circle><circle cx="68" cy="94" r="5"></circle><circle cx="68" cy="114" r="5"></circle>' +
+    '<line x1="86" y1="40" x2="140" y2="40" stroke-dasharray="3 4"></line>' +
+    '<line x1="86" y1="58" x2="140" y2="58" stroke-dasharray="3 4"></line>' +
+    '<line x1="86" y1="100" x2="140" y2="100" stroke-dasharray="3 4"></line>' +
+    '<line x1="86" y1="118" x2="140" y2="118" stroke-dasharray="3 4"></line>' +
+    '<text x="113" y="96" font-family="Cormorant Garamond, serif" font-size="58" fill="currentColor" stroke="none" text-anchor="middle">?</text>' +
+    E;
+
+  var FIGS = {
+    'Cocina': S +
+      '<rect x="18" y="14" width="52" height="34"></rect><rect x="72" y="14" width="44" height="34"></rect><rect x="118" y="14" width="40" height="34"></rect>' +
+      '<line x1="41" y1="40" x2="47" y2="40"></line><line x1="91" y1="40" x2="97" y2="40"></line>' +
+      '<line x1="12" y1="74" x2="208" y2="74"></line><rect x="18" y="74" width="184" height="6"></rect>' +
+      '<rect x="30" y="76" width="30" height="3"></rect>' +
+      '<rect x="18" y="80" width="184" height="56"></rect>' +
+      '<line x1="78" y1="80" x2="78" y2="136"></line><line x1="140" y1="80" x2="140" y2="136"></line>' +
+      '<line x1="70" y1="92" x2="70" y2="106"></line><line x1="86" y1="92" x2="86" y2="106"></line>' +
+      '<line x1="132" y1="92" x2="132" y2="106"></line><line x1="148" y1="92" x2="148" y2="106"></line>' +
+      E,
+    'Mesa': S +
+      '<rect x="28" y="52" width="164" height="9"></rect>' +
+      '<line x1="46" y1="61" x2="46" y2="126"></line><line x1="52" y1="61" x2="52" y2="126"></line>' +
+      '<line x1="168" y1="61" x2="168" y2="126"></line><line x1="174" y1="61" x2="174" y2="126"></line>' +
+      '<line x1="68" y1="61" x2="68" y2="118"></line><line x1="152" y1="61" x2="152" y2="118"></line>' +
+      '<line x1="52" y1="72" x2="168" y2="72"></line>' +
+      E,
+    'Vestidor': S +
+      '<rect x="52" y="14" width="116" height="124"></rect><line x1="110" y1="14" x2="110" y2="138"></line>' +
+      '<line x1="64" y1="30" x2="100" y2="30"></line>' +
+      '<line x1="70" y1="30" x2="70" y2="70"></line><line x1="78" y1="30" x2="78" y2="72"></line><line x1="86" y1="30" x2="86" y2="68"></line><line x1="94" y1="30" x2="94" y2="71"></line>' +
+      '<line x1="58" y1="102" x2="104" y2="102"></line>' +
+      '<line x1="116" y1="40" x2="162" y2="40"></line><line x1="116" y1="66" x2="162" y2="66"></line><line x1="116" y1="92" x2="162" y2="92"></line><line x1="116" y1="118" x2="162" y2="118"></line>' +
+      '<line x1="104" y1="72" x2="104" y2="86"></line><line x1="116" y1="72" x2="116" y2="86"></line>' +
+      E,
+    'Rack TV': S +
+      '<rect x="66" y="14" width="88" height="50"></rect>' +
+      '<line x1="98" y1="64" x2="122" y2="64"></line><line x1="92" y1="72" x2="128" y2="72"></line>' +
+      '<rect x="24" y="80" width="172" height="42"></rect>' +
+      '<line x1="81" y1="80" x2="81" y2="122"></line><line x1="139" y1="80" x2="139" y2="122"></line>' +
+      '<line x1="48" y1="100" x2="58" y2="100"></line><line x1="105" y1="100" x2="115" y2="100"></line><line x1="162" y1="100" x2="172" y2="100"></line>' +
+      '<line x1="36" y1="122" x2="36" y2="132"></line><line x1="184" y1="122" x2="184" y2="132"></line>' +
+      E,
+    'Escritorio': S +
+      '<rect x="22" y="50" width="176" height="9"></rect>' +
+      '<rect x="30" y="59" width="52" height="72"></rect>' +
+      '<line x1="30" y1="83" x2="82" y2="83"></line><line x1="30" y1="107" x2="82" y2="107"></line>' +
+      '<line x1="48" y1="71" x2="64" y2="71"></line><line x1="48" y1="95" x2="64" y2="95"></line><line x1="48" y1="119" x2="64" y2="119"></line>' +
+      '<line x1="184" y1="59" x2="184" y2="131"></line><line x1="190" y1="59" x2="190" y2="131"></line>' +
+      E,
+    'Respaldo': S +
+      '<path d="M34 86 V42 Q34 24 52 24 H168 Q186 24 186 42 V86 Z"></path>' +
+      '<path d="M46 82 V46 Q46 34 58 34 H162 Q174 34 174 46 V82"></path>' +
+      '<rect x="52" y="62" width="52" height="26" rx="9"></rect>' +
+      '<rect x="116" y="62" width="52" height="26" rx="9"></rect>' +
+      '<rect x="28" y="88" width="164" height="18" rx="4"></rect>' +
+      '<rect x="28" y="106" width="164" height="20"></rect>' +
+      '<line x1="36" y1="126" x2="36" y2="136"></line><line x1="184" y1="126" x2="184" y2="136"></line>' +
+      E,
+    'Mesa de luz': S +
+      '<path d="M96 16 h28 l6 16 h-40 z"></path><line x1="110" y1="32" x2="110" y2="52"></line>' +
+      '<rect x="60" y="52" width="100" height="56"></rect>' +
+      '<line x1="60" y1="80" x2="160" y2="80"></line>' +
+      '<circle cx="110" cy="66" r="2"></circle><circle cx="110" cy="94" r="2"></circle>' +
+      '<line x1="70" y1="108" x2="66" y2="134"></line><line x1="150" y1="108" x2="154" y2="134"></line>' +
+      E,
+    'Exterior': S +
+      '<line x1="48" y1="40" x2="172" y2="40"></line><line x1="48" y1="53" x2="172" y2="53"></line><line x1="48" y1="66" x2="172" y2="66"></line>' +
+      '<line x1="50" y1="38" x2="50" y2="84"></line><line x1="170" y1="38" x2="170" y2="84"></line>' +
+      '<rect x="42" y="80" width="136" height="10"></rect>' +
+      '<line x1="52" y1="90" x2="52" y2="128"></line><line x1="168" y1="90" x2="168" y2="128"></line>' +
+      '<line x1="52" y1="128" x2="46" y2="134"></line><line x1="168" y1="128" x2="174" y2="134"></line>' +
+      E,
+    'Biblioteca': S +
+      '<rect x="48" y="12" width="124" height="126"></rect>' +
+      '<line x1="48" y1="48" x2="172" y2="48"></line><line x1="48" y1="84" x2="172" y2="84"></line><line x1="48" y1="120" x2="172" y2="120"></line>' +
+      '<line x1="56" y1="22" x2="56" y2="48"></line><line x1="61" y1="20" x2="61" y2="48"></line><line x1="66" y1="24" x2="66" y2="48"></line><rect x="72" y="30" width="13" height="18"></rect><line x1="92" y1="20" x2="92" y2="48"></line><line x1="97" y1="23" x2="97" y2="48"></line><line x1="150" y1="22" x2="150" y2="48"></line><line x1="155" y1="20" x2="155" y2="48"></line><line x1="160" y1="25" x2="160" y2="48"></line>' +
+      '<line x1="56" y1="58" x2="56" y2="84"></line><line x1="61" y1="56" x2="61" y2="84"></line><rect x="67" y="62" width="13" height="22"></rect><line x1="88" y1="58" x2="88" y2="84"></line><line x1="93" y1="60" x2="93" y2="84"></line><line x1="98" y1="58" x2="98" y2="84"></line><line x1="148" y1="59" x2="148" y2="84"></line><line x1="153" y1="57" x2="153" y2="84"></line><line x1="158" y1="60" x2="158" y2="84"></line><line x1="163" y1="58" x2="163" y2="84"></line>' +
+      '<line x1="56" y1="94" x2="56" y2="120"></line><line x1="61" y1="92" x2="61" y2="120"></line><line x1="66" y1="96" x2="66" y2="120"></line><line x1="71" y1="93" x2="71" y2="120"></line><rect x="78" y="100" width="14" height="20"></rect><line x1="150" y1="94" x2="150" y2="120"></line><line x1="155" y1="92" x2="155" y2="120"></line><line x1="160" y1="95" x2="160" y2="120"></line>' +
+      E,
+    'Otro': NOTEPAD
+  };
+
+  /* ---- Terminaciones según el material (swatches reales en /swatches) ---- */
+  var TERMINACIONES = {
+    'Madera maciza': [
+      { n: 'Paraíso',  img: 'paraiso' },
+      { n: 'Petiribí', img: 'petiribi' },
+      { n: 'Kiri',     img: 'kiri' },
+      { n: 'Otro',     img: '' }
+    ],
+    'MDF pintado': [
+      { n: 'Blanco Natural', img: 'blanco-natural' },
+      { n: 'Roble',          img: 'roble' },
+      { n: 'Verde Salvia',   img: 'verde-salvia' },
+      { n: 'Gris Piedra',    img: 'gris-piedra' },
+      { n: 'Negro Mate',     img: 'negro-mate' },
+      { n: 'Terracota',      img: 'terracota' }
+    ],
+    'Melamina': [
+      { n: 'Paraíso',      img: 'paraiso' },
+      { n: 'Camelia',      img: 'camelia' },
+      { n: 'Verde Safari', img: 'verde-safari' },
+      { n: 'Gris Tapir',   img: 'gris-tapir' },
+      { n: 'Blanco',       img: 'blanco' },
+      { n: 'Otro',         img: '' }
+    ],
+    'Mixto': null
+  };
+
+  var pieceGrid = document.getElementById('piece-grid');
+  var materialGrid = document.getElementById('material-grid');
+  var herrajeGrid  = document.getElementById('herraje-grid');
+  var toneRow   = document.getElementById('tone-row');
+  var toneNote  = document.getElementById('tone-note');
+
+  var bpFigure = document.getElementById('bp-figure');
+  var bpName   = document.getElementById('bp-name');
+  var bpAlto   = document.getElementById('bp-alto');
+  var bpAncho  = document.getElementById('bp-ancho');
+  var bpFinish = document.getElementById('bp-finish');
+  var bpChip   = document.getElementById('bp-chip');
+  var bpTone   = document.getElementById('bp-tone');
+  var bpWood   = document.getElementById('bp-wood');
+  var tagMadera  = document.getElementById('tag-madera');
+  var tagHerraje = document.getElementById('tag-herraje');
+  var tagMedidas = document.getElementById('tag-medidas');
+
+  var inAncho = document.getElementById('f-ancho');
+  var inAlto  = document.getElementById('f-alto');
+  var inProf  = document.getElementById('f-prof');
+
+  function clean(v) { return (v || '').toString().trim(); }
+
+  function render() {
+    var ancho = clean(inAncho.value), alto = clean(inAlto.value), prof = clean(inProf.value);
+
+    /* figura + nombre */
+    if (state.piece) {
+      bpFigure.innerHTML = FIGS[state.piece] || NOTEPAD;
+      bpFigure.classList.remove('is-empty');
+      bpName.textContent = state.piece;
+      bpName.classList.remove('is-empty');
+    } else {
+      bpFigure.innerHTML = NOTEPAD;
+      bpFigure.classList.add('is-empty');
+      bpName.textContent = 'tu proyecto';
+      bpName.classList.add('is-empty');
+    }
+
+    /* medidas sobre el dibujo */
+    bpAlto.textContent = alto ? alto + ' cm' : 'alto';
+    var anchoTxt;
+    if (ancho && prof) anchoTxt = ancho + ' cm  ·  prof ' + prof;
+    else if (ancho) anchoTxt = ancho + ' cm';
+    else if (prof) anchoTxt = 'prof ' + prof + ' cm';
+    else anchoTxt = 'ancho total';
+    bpAncho.textContent = anchoTxt;
+
+    /* terminación */
+    if (state.tone) {
+      bpFinish.classList.remove('is-empty');
+      if (state.img) {
+        bpChip.style.backgroundImage = 'url("swatches/' + state.img + '.png")';
+        bpChip.classList.remove('is-otro');
+      } else {
+        bpChip.style.backgroundImage = 'none';
+        bpChip.classList.add('is-otro');
+      }
+      bpTone.textContent = state.tone;
+    } else {
+      bpFinish.classList.add('is-empty');
+    }
+
+    /* material */
+    if (state.material) {
+      bpWood.classList.remove('is-empty');
+      bpWood.textContent = state.material;
+    } else {
+      bpWood.classList.add('is-empty');
+    }
+
+    /* tags */
+    tagMadera.classList.toggle('on', !!state.material);
+    tagHerraje.classList.toggle('on', !!state.herraje);
+    tagMedidas.classList.toggle('on', !!(ancho && alto && prof));
+  }
+
+  function setTerminaciones(mat) {
+    state.tone = null;
+    state.img = null;
+    toneRow.innerHTML = '';
+    var list = TERMINACIONES[mat];
+    if (mat === 'Mixto') {
+      toneRow.style.display = 'none';
+      toneNote.style.display = '';
+      toneNote.textContent = 'Para un proyecto mixto, contanos la combinación de materiales y terminaciones en las observaciones de abajo.';
+    } else if (list) {
+      toneRow.style.display = '';
+      toneNote.style.display = 'none';
+      list.forEach(function (t) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tone';
+        b.setAttribute('data-tone', t.n);
+        b.setAttribute('data-img', t.img);
+        var chip = t.img
+          ? '<span class="chip" style="background-image:url(&quot;swatches/' + t.img + '.png&quot;)"></span>'
+          : '<span class="chip is-otro"></span>';
+        b.innerHTML = chip + '<span class="name">' + t.n + '</span>';
+        toneRow.appendChild(b);
+      });
+    } else {
+      toneRow.style.display = '';
+      toneNote.style.display = '';
+      toneNote.textContent = 'Elegí un material para ver las terminaciones.';
+    }
+    render();
+  }
+
+  function selectIn(container, btn, cls) {
+    Array.prototype.forEach.call(container.querySelectorAll('.' + cls), function (el) {
+      el.classList.remove('is-selected');
+    });
+    btn.classList.add('is-selected');
+  }
+
+  pieceGrid.addEventListener('click', function (e) {
+    var btn = e.target.closest('.piece');
+    if (!btn) return;
+    selectIn(pieceGrid, btn, 'piece');
+    state.piece = btn.getAttribute('data-piece');
+    render();
+  });
+
+  function bindOpt(container, key) {
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('.opt');
+      if (!btn) return;
+      selectIn(container, btn, 'opt');
+      state[key] = btn.getAttribute('data-val');
+      if (key === 'material') {
+        setTerminaciones(state.material);
+      } else {
+        render();
+      }
+    });
+  }
+  bindOpt(materialGrid, 'material');
+  bindOpt(herrajeGrid, 'herraje');
+
+  toneRow.addEventListener('click', function (e) {
+    var btn = e.target.closest('.tone');
+    if (!btn) return;
+    selectIn(toneRow, btn, 'tone');
+    state.tone = btn.getAttribute('data-tone');
+    state.img  = btn.getAttribute('data-img');
+    render();
+  });
+
+  [inAncho, inAlto, inProf].forEach(function (el) {
+    el.addEventListener('input', render);
+  });
+
+  var form   = document.getElementById('presupuesto');
+  var layout = document.getElementById('layout');
+  var thanks = document.getElementById('thanks');
+  var thanksTitle = document.getElementById('thanks-title');
+  var mastheadTitle = document.getElementById('masthead-title');
+  var mastheadSubs  = document.querySelectorAll('.masthead-sub');
+
+  function getVal(id) { return (document.getElementById(id).value || '').trim(); }
+
+  /* ---- Imagen descargable del plano (mismo lenguaje que el panel) ---- */
+  function svgToImage(svg) {
+    return new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = rej;
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+  function loadImg(src) {
+    return new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = rej;
+      im.src = src;
+    });
+  }
+  function ls(ctx, v) { if ('letterSpacing' in ctx) ctx.letterSpacing = v; }
+
+  async function buildPlanCanvas() {
+    var INK = '#2E2218', SOFT = '#5A4634', MUTE = '#8C7B68', ACCENT = '#95714F';
+    var HAIR = 'rgba(46,34,24,0.16)', BG = '#EADED0';
+    var scale = 2, W = 520, H = 700;
+
+    try {
+      await document.fonts.load('400 30px "Cinzel"');
+      await document.fonts.load('300 13px "Jost"');
+      await document.fonts.load('400 21px "Cormorant Garamond"');
+      await document.fonts.ready;
+    } catch (e) {}
+
+    var canvas = document.createElement('canvas');
+    canvas.width = W * scale; canvas.height = H * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
+    ctx.strokeRect(24.5, 24.5, W - 49, H - 49);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+    /* wordmark */
+    ctx.fillStyle = INK;
+    ctx.font = '400 30px "Cinzel", serif';
+    ls(ctx, '8px');
+    ctx.fillText('TECA', W / 2 + 4, 74);
+    ls(ctx, '0px');
+
+    /* eyebrow */
+    ctx.fillStyle = MUTE;
+    ctx.font = 'italic 300 13px "Jost", sans-serif';
+    ctx.fillText('— tu encargo —', W / 2, 98);
+
+    /* figura */
+    var fig = (FIGS[state.piece] || NOTEPAD);
+    fig = fig.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="218" ');
+    fig = fig.split('currentColor').join(state.piece ? INK : 'rgba(46,34,24,0.4)');
+    try {
+      var figImg = await svgToImage(fig);
+      ctx.drawImage(figImg, (W - 320) / 2, 122, 320, 218);
+    } catch (e) {}
+
+    /* nombre del proyecto */
+    ctx.fillStyle = state.piece ? INK : MUTE;
+    ctx.font = '400 15px "Jost", sans-serif';
+    ls(ctx, '3px');
+    ctx.fillText((state.piece || 'TU PROYECTO').toUpperCase(), W / 2, 374);
+    ls(ctx, '0px');
+
+    /* medidas */
+    var ancho = getVal('f-ancho'), alto = getVal('f-alto'), prof = getVal('f-prof');
+    var mParts = [];
+    if (alto) mParts.push('alto ' + alto);
+    if (ancho) mParts.push('ancho ' + ancho);
+    if (prof) mParts.push('prof ' + prof);
+    if (mParts.length) {
+      ctx.fillStyle = ACCENT;
+      ctx.font = '400 12px "Jost", sans-serif';
+      ls(ctx, '1px');
+      ctx.fillText(mParts.join('   ·   ') + '   cm', W / 2, 400);
+      ls(ctx, '0px');
+    }
+
+    /* divisor */
+    ctx.strokeStyle = HAIR; ctx.beginPath();
+    ctx.moveTo(W / 2 - 90, 430); ctx.lineTo(W / 2 + 90, 430); ctx.stroke();
+
+    /* terminación: chip + nombre */
+    var ty = 472;
+    if (state.tone) {
+      ctx.font = '400 21px "Cormorant Garamond", serif';
+      var tw = ctx.measureText(state.tone).width;
+      var r = 11, gap = 10, total = r * 2 + gap + tw, sx = W / 2 - total / 2, cy = ty - 7;
+      if (state.img) {
+        try {
+          var sw = await loadImg('swatches/' + state.img + '.png');
+          ctx.save();
+          ctx.beginPath(); ctx.arc(sx + r, cy, r, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+          ctx.drawImage(sw, sx, cy - r, r * 2, r * 2);
+          ctx.restore();
+          ctx.strokeStyle = HAIR; ctx.beginPath(); ctx.arc(sx + r, cy, r, 0, Math.PI * 2); ctx.stroke();
+        } catch (e) {}
+      } else {
+        ctx.strokeStyle = MUTE; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.arc(sx + r, cy, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.fillStyle = INK; ctx.textAlign = 'left';
+      ctx.fillText(state.tone, sx + r * 2 + gap, ty);
+      ctx.textAlign = 'center';
+    }
+
+    /* material */
+    var matY = state.tone ? 504 : 476;
+    if (state.material) {
+      ctx.fillStyle = SOFT;
+      ctx.font = '400 12px "Jost", sans-serif';
+      ls(ctx, '1.5px');
+      ctx.fillText(state.material.toUpperCase(), W / 2, matY);
+      ls(ctx, '0px');
+    }
+    /* herrajes */
+    if (state.herraje) {
+      ctx.fillStyle = MUTE;
+      ctx.font = 'italic 300 13px "Jost", sans-serif';
+      ctx.fillText('Herrajes · ' + state.herraje, W / 2, matY + 22);
+    }
+
+    /* pie: cliente + fecha + contacto */
+    var nm = getVal('f-nombre');
+    var d = new Date();
+    var ds = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+    ctx.fillStyle = SOFT; ctx.font = '300 12px "Jost", sans-serif';
+    ctx.fillText((nm ? nm + '   ·   ' : '') + ds, W / 2, H - 72);
+    ctx.fillStyle = MUTE; ctx.font = '300 10px "Jost", sans-serif';
+    ls(ctx, '0.5px');
+    ctx.fillText('TECA  ·  Taller en Gonnet, La Plata  ·  +54 9 221 590 4082', W / 2, H - 50);
+    ls(ctx, '0px');
+
+    return canvas;
+  }
+
+  async function downloadPlan() {
+    try {
+      var canvas = await buildPlanCanvas();
+      var url = canvas.toDataURL('image/png');
+      var a = document.createElement('a');
+      var nm = (getVal('f-nombre') || 'proyecto').replace(/\s+/g, '-');
+      a.download = 'TECA-presupuesto-' + nm + '.png';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) { console.warn('No se pudo generar la imagen del plano', e); }
+  }
+
+  function setMastheadMode(done) {
+    mastheadTitle.textContent = done ? '¡Recibido!' : 'Pedinos presupuesto.';
+    Array.prototype.forEach.call(mastheadSubs, function (p) {
+      p.style.display = done ? 'none' : '';
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var val = function (id) { return (document.getElementById(id).value || '').trim(); };
+    var ancho = val('f-ancho'), alto = val('f-alto'), prof = val('f-prof');
+    var medidas = [
+      ancho ? 'ancho ' + ancho : '',
+      alto ? 'alto ' + alto : '',
+      prof ? 'prof ' + prof : ''
+    ].filter(Boolean).join(' · ');
+
+    var L = [];
+    L.push('*Nueva consulta · TECA*');
+    L.push('');
+    L.push('Nombre: ' + (val('f-nombre') || '—'));
+    L.push('Ubicación: ' + (val('f-ubicacion') || '—'));
+    L.push('Celular: ' + (val('f-celular') || '—'));
+    L.push('Correo: ' + (val('f-correo') || '—'));
+    L.push('');
+    L.push('Proyecto: ' + (state.piece || '—'));
+    L.push('Medidas (cm): ' + (medidas || '—'));
+    L.push('Material: ' + (state.material || '—'));
+    L.push('Terminación: ' + (state.tone || '—'));
+    L.push('Herrajes: ' + (state.herraje || '—'));
+    L.push('');
+    L.push('Observaciones: ' + (val('f-mensaje') || '—'));
+    var texto = L.join('\n');
+
+    window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
+
+    /* Descarga automática de la imagen del plano */
+    downloadPlan();
+
+    var nombre = val('f-nombre');
+    var first  = nombre ? nombre.split(' ')[0] : '';
+    thanksTitle.innerHTML = 'Gracias' + (first ? ' ' + first : '') + ', te escribimos pronto.';
+    setMastheadMode(true);
+    layout.classList.add('hide');
+    thanks.classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    form.reset();
+    state = { piece: null, material: null, herraje: null, tone: null, img: null };
+    Array.prototype.forEach.call(document.querySelectorAll('.is-selected'), function (el) {
+      el.classList.remove('is-selected');
+    });
+    setTerminaciones(null);
+    setMastheadMode(false);
+    thanks.classList.remove('show');
+    layout.classList.remove('hide');
+  });
+
+  setTerminaciones(null);
+})();
+</script>
+</body>
+</html>
