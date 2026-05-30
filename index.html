@@ -206,6 +206,18 @@
   .thanks p { color: var(--fg-2); font-size: 17px; max-width: 46ch; margin: 0 auto 18px; }
   .thanks-actions { margin: 26px auto 6px; display: flex; justify-content: center; }
   .thanks .btn { display: inline-block; text-decoration: none; white-space: nowrap; }
+  .plan-wrap { display: none; flex-direction: column; align-items: center; margin: 30px auto 6px; }
+  .plan-wrap.show { display: flex; }
+  .plan-img {
+    width: 100%; max-width: 280px; height: auto; display: block;
+    border: 1px solid var(--border-hair); border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+  }
+  .plan-hint {
+    font-family: var(--font-sans); font-style: italic; font-weight: 300;
+    font-size: 13px; line-height: 1.5; color: var(--c-ink-mute);
+    max-width: 34ch; margin: 0 0 12px;
+  }
   .thanks .note {
     font-family: var(--font-display); font-style: italic; font-weight: 400;
     font-size: 18px; line-height: 1.5; color: var(--c-ink-soft);
@@ -578,7 +590,12 @@
     <div class="thanks-actions">
       <a class="btn" id="wa-btn" href="#" target="_blank" rel="noopener">Abrir WhatsApp</a>
     </div>
-    <p class="note">La imagen del plano de tu presupuesto ya se descargó automáticamente. Si querés, sumala al chat de WhatsApp junto con cualquier otra referencia que tengas<br>(foto del espacio donde va el proyecto, alguna idea que hayas visto en internet, etc).</p>
+    <div class="plan-wrap" id="plan-wrap">
+      <img id="plan-img" class="plan-img" alt="Plano de tu presupuesto">
+      <p class="plan-hint" id="plan-hint">Mantené presionada la imagen y elegí <em>Guardar en fotos</em> — o usá el botón.</p>
+      <button type="button" class="link-btn" id="save-img-btn">Guardar imagen</button>
+    </div>
+    <p class="note">Si querés, sumá esta imagen del plano al chat de WhatsApp, junto con cualquier otra referencia que tengas<br>(foto del espacio donde va el proyecto, alguna idea que hayas visto en internet, etc).</p>
     <button type="button" class="link-btn" id="reset-btn">← Cargar otra consulta</button>
   </div>
 
@@ -1009,18 +1026,60 @@
     return canvas;
   }
 
-  async function downloadPlan() {
+  async function showPlan() {
+    var planWrap = document.getElementById('plan-wrap');
+    var planImg  = document.getElementById('plan-img');
+    var planHint = document.getElementById('plan-hint');
+    var saveBtn  = document.getElementById('save-img-btn');
     try {
       var canvas = await buildPlanCanvas();
-      var url = canvas.toDataURL('image/png');
-      var a = document.createElement('a');
       var nm = (getVal('f-nombre') || 'proyecto').replace(/\s+/g, '-');
-      a.download = 'TECA-presupuesto-' + nm + '.png';
-      a.href = url;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (e) { console.warn('No se pudo generar la imagen del plano', e); }
+      var filename = 'TECA-presupuesto-' + nm + '.png';
+
+      var blob = await new Promise(function (res) {
+        if (canvas.toBlob) canvas.toBlob(res, 'image/png');
+        else res(null);
+      });
+      var url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
+
+      /* Mostramos el plano para que se pueda guardar como foto (mantener presionado) */
+      planImg.src = url;
+      planWrap.classList.add('show');
+
+      /* ¿El dispositivo puede compartir archivos (celular)? */
+      var file = null, canShareFile = false;
+      try {
+        if (blob && navigator.canShare) {
+          file = new File([blob], filename, { type: 'image/png' });
+          canShareFile = navigator.canShare({ files: [file] });
+        }
+      } catch (e) { canShareFile = false; }
+
+      if (canShareFile) {
+        planHint.innerHTML = 'Mant&eacute;n presionada la imagen y eleg&iacute; <em>Guardar en fotos</em> — o tocá el botón para guardarla o compartirla.';
+        saveBtn.textContent = 'Guardar o compartir imagen';
+        saveBtn.onclick = function () {
+          navigator.share({ files: [file], title: 'Plano TECA', text: 'Plano de mi presupuesto · TECA' })
+            .catch(function () {});
+        };
+      } else {
+        /* Escritorio: descarga directa a la carpeta de descargas */
+        planHint.innerHTML = 'Tocá el botón para descargar la imagen del plano.';
+        saveBtn.textContent = 'Descargar imagen';
+        saveBtn.onclick = function () {
+          var a = document.createElement('a');
+          a.download = filename; a.href = url;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        };
+        /* En escritorio la descargamos sola, como antes */
+        var a0 = document.createElement('a');
+        a0.download = filename; a0.href = url;
+        document.body.appendChild(a0); a0.click(); document.body.removeChild(a0);
+      }
+    } catch (e) {
+      console.warn('No se pudo generar la imagen del plano', e);
+      if (planWrap) planWrap.classList.remove('show');
+    }
   }
 
   function setMastheadMode(done) {
@@ -1069,8 +1128,8 @@
     thanks.classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    /* Descarga automática de la imagen del plano */
-    downloadPlan();
+    /* Generamos el plano y lo mostramos para guardar como foto / compartir */
+    showPlan();
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
@@ -1081,6 +1140,8 @@
     });
     setTerminaciones(null);
     setMastheadMode(false);
+    var planWrap = document.getElementById('plan-wrap');
+    if (planWrap) planWrap.classList.remove('show');
     thanks.classList.remove('show');
     layout.classList.remove('hide');
   });
