@@ -290,7 +290,7 @@
 
   @media (max-width: 920px) {
     .layout { grid-template-columns: 1fr; gap: 40px; }
-    .encargo { position: static; }
+    .encargo { position: static; margin-top: 38px; margin-bottom: 4px; }
     .bp-frame { max-width: 440px; margin: 0 auto; }
   }
   @media (max-width: 600px) {
@@ -1025,7 +1025,7 @@
     });
   }
 
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
     var val = function (id) { return (document.getElementById(id).value || '').trim(); };
     var ancho = val('f-ancho'), alto = val('f-alto'), prof = val('f-prof');
@@ -1052,11 +1052,8 @@
     L.push('Observaciones: ' + (val('f-mensaje') || '—'));
     var texto = L.join('\n');
 
-    window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
-
-    /* Descarga automática de la imagen del plano */
-    downloadPlan();
-
+    /* Mostramos el agradecimiento (con el nombre) ANTES de abrir WhatsApp,
+       así en el celular la pantalla queda renderizada aunque la app tome el control. */
     var nombre = val('f-nombre');
     var first  = nombre ? nombre.split(' ')[0] : '';
     thanksTitle.innerHTML = 'Gracias' + (first ? ' ' + first : '') + ', te escribimos pronto.';
@@ -1064,6 +1061,13 @@
     layout.classList.add('hide');
     thanks.classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    /* Descarga automática de la imagen del plano (esperamos a que termine
+       antes de abrir WhatsApp) */
+    await downloadPlan();
+
+    /* Abrimos WhatsApp al final, ya con la consulta cargada */
+    window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
@@ -1077,6 +1081,26 @@
     thanks.classList.remove('show');
     layout.classList.remove('hide');
   });
+
+  /* ---- En celular, el panel del plano sube y queda debajo de
+     "¿Qué proyecto tenés en mente?"; en desktop vuelve a la columna derecha. ---- */
+  (function () {
+    var encargoEl  = document.querySelector('.encargo');
+    var pieceBlock = pieceGrid.closest('.block');
+    var mq = window.matchMedia('(max-width: 920px)');
+    function place() {
+      if (mq.matches) {
+        if (pieceBlock.nextElementSibling !== encargoEl) {
+          pieceBlock.insertAdjacentElement('afterend', encargoEl);
+        }
+      } else if (layout.lastElementChild !== encargoEl) {
+        layout.appendChild(encargoEl);
+      }
+    }
+    if (mq.addEventListener) mq.addEventListener('change', place);
+    else if (mq.addListener) mq.addListener(place);
+    place();
+  })();
 
   setTerminaciones(null);
 })();
