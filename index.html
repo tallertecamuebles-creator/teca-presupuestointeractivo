@@ -204,6 +204,8 @@
     color: var(--c-ink);
   }
   .thanks p { color: var(--fg-2); font-size: 17px; max-width: 46ch; margin: 0 auto 18px; }
+  .thanks-actions { margin: 26px auto 6px; display: flex; justify-content: center; }
+  .thanks .btn { display: inline-block; text-decoration: none; white-space: nowrap; }
   .thanks .note {
     font-family: var(--font-display); font-style: italic; font-weight: 400;
     font-size: 18px; line-height: 1.5; color: var(--c-ink-soft);
@@ -572,8 +574,11 @@
   <!-- Gracias -->
   <div class="thanks" id="thanks">
     <h2 id="thanks-title">Gracias, te escribimos pronto.</h2>
-    <p>Te abrimos WhatsApp con tu consulta ya cargada — solo tenés que tocar enviar y nos llega al taller. La miramos con calma y te respondemos a la brevedad con los próximos pasos.</p>
-    <p class="note">Si querés, también podés adjuntarnos la imagen del plano de tu presupuesto que ya se te descargó automáticamente, o cualquier otra información que consideres útil<br>(foto del espacio donde va el proyecto, alguna referencia que hayas visto en internet, etc).</p>
+    <p>Tu consulta ya está lista. Tocá el botón para abrirla en WhatsApp y enviárnosla — nos llega al taller y la miramos con calma para responderte a la brevedad.</p>
+    <div class="thanks-actions">
+      <a class="btn" id="wa-btn" href="#" target="_blank" rel="noopener">Abrir WhatsApp</a>
+    </div>
+    <p class="note">La imagen del plano de tu presupuesto ya se descargó automáticamente. Si querés, sumala al chat de WhatsApp junto con cualquier otra referencia que tengas<br>(foto del espacio donde va el proyecto, alguna idea que hayas visto en internet, etc).</p>
     <button type="button" class="link-btn" id="reset-btn">← Cargar otra consulta</button>
   </div>
 
@@ -1019,7 +1024,7 @@
   }
 
   function setMastheadMode(done) {
-    mastheadTitle.textContent = done ? '¡Recibido!' : 'Pedinos presupuesto.';
+    mastheadTitle.textContent = done ? 'Recibido.' : 'Pedinos presupuesto.';
     Array.prototype.forEach.call(mastheadSubs, function (p) {
       p.style.display = done ? 'none' : '';
     });
@@ -1053,30 +1058,19 @@
     var texto = L.join('\n');
     var waUrl = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto);
 
-    /* Reservamos la pestaña de WhatsApp en el mismo instante del clic.
-       Si esperamos (await) antes de abrirla, el bloqueador de pop-ups la frena. */
-    var waWin = window.open('', '_blank');
-
-    /* Mostramos el agradecimiento (con el nombre) ANTES de abrir WhatsApp,
-       así en el celular la pantalla queda renderizada aunque la app tome el control. */
+    /* Mostramos el agradecimiento (con el nombre). Esta pantalla queda siempre
+       visible; WhatsApp se abre cuando la persona toca el botón. */
     var nombre = val('f-nombre');
     var first  = nombre ? nombre.split(' ')[0] : '';
     thanksTitle.innerHTML = 'Gracias' + (first ? ' ' + first : '') + ', te escribimos pronto.';
+    document.getElementById('wa-btn').href = waUrl;
     setMastheadMode(true);
     layout.classList.add('hide');
     thanks.classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    /* Descarga automática de la imagen del plano (esperamos a que termine
-       antes de mandar a WhatsApp) */
-    await downloadPlan();
-
-    /* Mandamos la pestaña reservada a WhatsApp, ya con la consulta cargada */
-    if (waWin && !waWin.closed) {
-      waWin.location.href = waUrl;
-    } else {
-      window.open(waUrl, '_blank');
-    }
+    /* Descarga automática de la imagen del plano */
+    downloadPlan();
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
