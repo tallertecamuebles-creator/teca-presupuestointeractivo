@@ -1051,6 +1051,11 @@
     L.push('');
     L.push('Observaciones: ' + (val('f-mensaje') || '—'));
     var texto = L.join('\n');
+    var waUrl = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto);
+
+    /* Reservamos la pestaña de WhatsApp en el mismo instante del clic.
+       Si esperamos (await) antes de abrirla, el bloqueador de pop-ups la frena. */
+    var waWin = window.open('', '_blank');
 
     /* Mostramos el agradecimiento (con el nombre) ANTES de abrir WhatsApp,
        así en el celular la pantalla queda renderizada aunque la app tome el control. */
@@ -1063,11 +1068,15 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     /* Descarga automática de la imagen del plano (esperamos a que termine
-       antes de abrir WhatsApp) */
+       antes de mandar a WhatsApp) */
     await downloadPlan();
 
-    /* Abrimos WhatsApp al final, ya con la consulta cargada */
-    window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
+    /* Mandamos la pestaña reservada a WhatsApp, ya con la consulta cargada */
+    if (waWin && !waWin.closed) {
+      waWin.location.href = waUrl;
+    } else {
+      window.open(waUrl, '_blank');
+    }
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
